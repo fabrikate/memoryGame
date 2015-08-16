@@ -1,185 +1,130 @@
-// Create DOM Structure, global variables
+// set up structure for DOM
 var body = document.querySelectorAll('body')[0];
-var header = document.createElement('header');
-var divArray = document.querySelectorAll('div');
-var counter = document.createElement('section');
-body.appendChild(counter);
-counter.innerHTML = 'Current Matches is :' + '<span id="scoreUpdate"></span>';
-var glasses_clicked = 0;
-var hat_clicked = 0;
-var stash_clicked = 0;
-var camera_clicked = 0;
-var counterSpan = document.getElementById('scoreUpdate');
-var matches = 0;
-counterSpan.innerHTML = matches;
-
-//create Header
-function populateHeader(title) {
-	body.appendChild(header);
-	header.style.color = '#CDFF00';
-	header.style.fontFamily = 'serif';
-	header.style.fontSize = '48px';
-	header.style.width = '90%';
-	header.style.paddingBottom = '2%';
-	header.style.textAlign = 'center';
-	header.innerHTML = 'Hipster Memory';
-}
-populateHeader();
-
-
-var br = document.createElement('br');
-var section = document.createElement('section');
-section.setAttribute('id', 'memoryGameContainer');
-body.appendChild(section);
 body.style.backgroundColor = '#B8B89F';
-section.style.width = '90%';
-section.style.float = 'right';
+body.style.color = '#CDFF00';
+body.style.fontSize = '42px'
+body.style.textAlign = 'center';
 
+var header = document.createElement('header');
+header.innerHTML = 'Memory Game';
+body.appendChild(header);
 
-//create a 4 x 4 cards
-function populateBoard(numofCards) {
-	if(isNaN(numofCards)) {
-		numofCards === 16;
-	}
+var section = document.createElement('section');
+section.innerHTML = 'Matched Pairs are: ' + '<span id="matchedPairNum">0</span>';
+header.appendChild(section);
 
-	for (var i = 0; i < numofCards; i++) {
-		div = document.createElement('div');
-		section.appendChild(div);
-		div.setAttribute('id', 'div' + [i]);
-		div.style.backgroundColor = "#52656B";
-		div.style.border = 'solid 3px #FF3B77';
-		div.style.width = '20%';
-		div.style.paddingBottom = '14.1%'
-		div.style.float = 'left';
-		div.style.marginTop = '5px';
-		div.style.marginBottom = '5px';
-		div.style.marginRight = '2px';
-		div.style.marginLeft = '2px';
-	}
+var div = document.createElement('div');
+div.setAttribute('id', 'gameBoard');
+body.appendChild(div);
+var gameBoardStyle = document.getElementById('gameBoard');
+gameBoardStyle.style.background = '#B8B89F';
+gameBoardStyle.style.border = '#FF3B77 1px solid';
+gameBoardStyle.style.width = '600px';
+gameBoardStyle.style.height = '540px';
+gameBoardStyle.style.padding = '24px';
+gameBoardStyle.style.margin = '0px auto';
+
+var memoryCards = ['A','A','B','B','C','C','D','D','E','E','F','F','G','G','H','H'];
+var cardValues = [];
+var cardIds = [];
+var cardsFlipped = 0;
+
+//createArray that shuffles
+Array.prototype.memory_tile_shuffle = function(){
+    var i = this.length, j, temp;
+    while(--i > 0){
+        j = Math.floor(Math.random() * (i+1));
+        temp = this[j];
+        this[j] = this[i];
+        this[i] = temp;
+    }
 }
-populateBoard(16);
-
-// // Event Triggers to "flip" the cards
-// create 2 pairs per picture cards
-function backOfCard(divNum) {
-	var divArray = document.querySelectorAll('div');
-	divArray[divNum].addEventListener('click', function() {
-		this.style.backgroundColor = "#52656B";
-		this.style.border = 'solid 3px #FF3B77';
-		this.style.width = '20%';
-		this.style.paddingBottom = '14.1%'
-		this.style.float = 'left';
-		this.style.marginTop = '5px';
-		this.style.marginBottom = '5px';
-		this.style.marginRight = '2px';
-		this.style.marginLeft = '2px';
-	});
-}
-
-function eventListenerHat(divNum) {
-	var divArray = document.querySelectorAll('div');
-	for( var i = 0; i < divArray.length; i++) {
-		divArray[divNum].addEventListener('click', function() {
-			this.innerHTML = '<img src="Hat.jpg" height="170px" height="260px">';
-			this.style.paddingBottom = '4px';
-		});
+function newBoard(){
+	cardsFlipped = 0;
+	var output = '';
+    memoryCards.memory_tile_shuffle();
+	for(var i = 0; i < memoryCards.length; i++){
+		output += '<div id="tile_'+i+'" onclick="memoryFlipTile(this,\''+memoryCards[i]+'\')"></div>';
 	}
+	document.getElementById('gameBoard').innerHTML = output;
 }
-
-function eventListenerGlasses(divNum) {
-	var divArray = document.querySelectorAll('div');
-	for( var i = 0; i < divArray.length; i++) {
-		divArray[divNum].addEventListener('click', function() {
-			this.innerHTML = '<img src="Glasses.jpg" height="170px" height="260px">';
-			this.style.paddingBottom = '4px';
-		});
+newBoard();
+function styleDivs() {
+	var div = document.querySelectorAll('div:not(#gameBoard)');
+	for(var i = 0; i < div.length; i++){
+		div[i].style.backgroundColor = "#52656B";
+		div[i].style.border = 'solid 3px #FF3B77';
+		div[i].style.width = '88px';
+		div[i].style.height = '88px';
+		div[i].style.padding = '20px';
+		div[i].style.textAlign = 'center';
+		div[i].style.fontSize = '64px';
+		div[i].style.float = 'left';
 	}
 }
+styleDivs();
 
-function eventListenerStash(divNum) {
-	var divArray = document.querySelectorAll('div');
-	for( var i = 0; i < divArray.length; i++) {
-		divArray[divNum].addEventListener('click', function() {
-			this.innerHTML = '<img src="stash.jpg" height="170px" height="260px">';
-			this.style.paddingBottom = '4px';
-		});
+var count = 0;
+function updateScore() {
+	count += 1
+	var score = document.getElementById('matchedPairNum');
+	score.innerHTML = count;
+}
+
+function memoryFlipTile(tile,val){
+	if(tile.innerHTML == "" && cardValues.length < 2){
+		tile.style.background = '#B6B6B4';
+		tile.innerHTML = val;
+		//push the value of card picked to array
+		if(cardValues.length == 0){
+			cardValues.push(val);
+			cardIds.push(tile.id);
+			// if their is already a card picked pushed the second card picked into the array
+		} else if(cardValues.length == 1){
+			cardValues.push(val);
+			cardIds.push(tile.id);
+			if(cardValues[0] == cardValues[1]){
+				cardsFlipped += 2;
+				updateScore();
+				// Clear both arrays
+				cardValues = [];
+            	cardIds = [];
+				// Check to see if the whole board is cleared
+				if(cardsFlipped == memoryCards.length){
+					var score = document.getElementById('matchedPairNum');
+					count = 'Congratulations! You got them all';
+					score.innerHTML = count;
+					document.getElementById('gameBoard').innerHTML = "";
+					newBoard();
+				}
+			} else {
+				function flip2Back(){
+				    // Flip the 2 tiles back over
+				    var tile_1 = document.getElementById(cardIds[0]);
+				    var tile_2 = document.getElementById(cardIds[1]);
+				    tile_1.style.backgroundColor = "#52656B";
+            	    tile_1.innerHTML = "";
+				    tile_2.style.backgroundColor = "#52656B";
+            	    tile_2.innerHTML = "";
+				    // Clear both arrays
+				    cardValues = [];
+            	    cardIds = [];
+				}
+				setTimeout(flip2Back, 800);
+			}
+		}
 	}
 }
 
-function eventListenerCamera(divNum) {
-	var divArray = document.querySelectorAll('div');
-	for( var i = 0; i < divArray.length; i++) {
-		divArray[divNum].addEventListener('click', function() {
-			this.innerHTML = '<img src="Camera.jpg" height="170px" height="260px">';
-			this.style.paddingBottom = '4px';
-		});
-	}
-}
-
-
-eventListenerGlasses(0);
-eventListenerGlasses(1);
-eventListenerHat(2);
-eventListenerStash(3);
-eventListenerCamera(4);
-eventListenerCamera(5);
-eventListenerGlasses(6);
-eventListenerStash(7);
-eventListenerHat(8);
-eventListenerStash(9);
-eventListenerHat(10);
-eventListenerGlasses(11);
-eventListenerHat(12);
-eventListenerStash(13);
-eventListenerCamera(14);
-eventListenerCamera(15);
-
-// Score that keeps track of how many pairs the player had
-function clearBoard() {
-	var imgs = document.querySelectorAll('img');
-	for(var i = 0; i < imgs.length; i++) {
-		imgs[i].setAttribute('src', 'blankSlate.jpg');
-	}
-}
-
-function glassesCount(numA, numB, numC, numD) {
-	var divArray = document.querySelectorAll('div');
-	divArray[numA].onclick = function() {
-		glasses_clicked += 1;
-		console.log(glasses_clicked);
-	};
-	divArray[numB].onclick = function() {
-		glasses_clicked += 1;
-		console.log(glasses_clicked);
-	};
-	divArray[numC].onclick = function() {
-		glasses_clicked += 1;
-		console.log(glasses_clicked);
-	};
-	divArray[numD].onclick = function() {
-		glasses_clicked += 1;
-		console.log(glasses_clicked);
-	};
-	if(glasses_clicked % 2 === 0) {
-
-	} else if (glasses_clicked === 2) {
-		matches +=1;
-		counterSpan.innerHTML = 1;
-	};
-}
-
-glassesCount(0,1,6,11);
-
-// reset button
 function resetButton() {
 	var button = document.createElement('button');
-	var imgs = document.querySelectorAll('img');
-	header.appendChild(button);
-	button.innerHTML = 'Reset Board';
-	button.addEventListener('click', function () {
-		clearBoard();
+	button.innerHTML = 'Reset Board'
+	button.addEventListener('click', function() {
+		newBoard();
 	})
+	gameBoardStyle.appendChild(button);
+
 }
 resetButton();
 
-// if there is an accurate match the cards will stay up.
+
